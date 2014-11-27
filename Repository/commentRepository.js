@@ -58,6 +58,7 @@ module.exports = function(){
         Comment.findOne({ _id : id }).populate('article').populate('user').exec(callback);
     };
 
+
     /**
      * 查找数据 使用文章回复字段数组进行分页 开始位置，长度 t.find( { x : { $elemMatch : { a : 1, b : { $gt : 1 } } } } )
      * @param param     查询参数

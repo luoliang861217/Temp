@@ -8,9 +8,11 @@ var validator = require('validator');
 var settings = require('../settings');
 var articleRepository = require('../Repository/articleRepository');
 var categoryRepository = require('../Repository/categoryRepository');
+var USERRepository = require('../Repository/userRepository');
 var Article = require('../model/article');
 var log = require('../common/log');
 var moment = require('moment');
+var EventProxy = require('eventproxy');
 
 var http = require('http');
 var url = require('url');
@@ -68,6 +70,7 @@ function site(){
      */
     this.details = function(req,res,next){
         var repository = new articleRepository();
+        var URepository = new USERRepository();
         var errReturn = function(){
             return res.redirect('/index');
         };
@@ -90,19 +93,27 @@ function site(){
             else{
                 article.create = moment.unix(article.createTime).format('YYYY-MM-DD HH:mm:ss');
                 article.comments.total = article.comments.length;
+                var ep = new EventProxy();
+                ep.after('getuserbyid', article.comments.length, function (users) {
+                    for(var i=0;i<article.comments.length;i++){
+                        article.comments[i].userObj = users[i];
+                    }
+                    lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
+                    res.render('details', {
+                        title:  article.title + title,
+                        layout:'layout',
+                        success : req.flash("success").toString(),
+                        error: req.flash("error").toString(),
+                        lay : lay,
+                        data :article,
+                        page : this.page(req.query.pageIndex,req.query.pageSize,req.query.Total,'','page-navigator')
+                    });
+                }.bind(this));
                 article.comments.forEach(function(item){
+                    URepository.getById(item.user,function(err,user){
+                        ep.emit('getuserbyid', user);
+                    });
                     item.create = moment.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss');
-                });
-                lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
-                lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
-                res.render('details', {
-                    title:  article.title + title,
-                    layout:'layout',
-                    success : req.flash("success").toString(),
-                    error: req.flash("error").toString(),
-                    lay : lay,
-                    data :article,
-                    page : this.page(req.query.pageIndex,req.query.pageSize,req.query.Total,'','page-navigator')
                 });
             }
         }.bind(this));
@@ -117,12 +128,12 @@ function site(){
     this.guestbook = function(req,res,next){
         lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
         res.render("guestbook",{
-                title:'留言' + title,
-                blogtitle: blogtitle,
-                blogdescription:blogdescription,
-                user: req.session.user,
-                layout: 'layout',
-                lay : lay
+            title:'留言' + title,
+            blogtitle: blogtitle,
+            blogdescription:blogdescription,
+            user: req.session.user,
+            layout: 'layout',
+            lay : lay
         });
     };
 
@@ -135,12 +146,12 @@ function site(){
     this.about = function(req,res,next){
         lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
         res.render("about",{
-                title:'关于' + title,
-                blogtitle: blogtitle,
-                blogdescription:blogdescription,
-                user: req.session.user,
-                layout: 'layout',
-                lay : lay
+            title:'关于' + title,
+            blogtitle: blogtitle,
+            blogdescription:blogdescription,
+            user: req.session.user,
+            layout: 'layout',
+            lay : lay
         });
     };
 
@@ -151,5 +162,3 @@ exports.index = Site.index.bind(Site);
 exports.details = Site.details.bind(Site);
 exports.guestbook = Site.guestbook.bind(Site);
 exports.about = Site.about.bind(Site);
-
-
