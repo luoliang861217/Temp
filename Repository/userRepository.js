@@ -62,7 +62,7 @@ module.exports = function(){
     };
 
     this.getListByIds = function(ids,callback){
-        User.findOne({ _id : {$in: ids} },callback);
+        User.find({ _id : {$in: ids} },callback);
     };
     /**
      * 查找数据 通过usernanme

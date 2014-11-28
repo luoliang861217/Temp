@@ -13,6 +13,7 @@ var Article = require('../model/article');
 var log = require('../common/log');
 var moment = require('moment');
 var EventProxy = require('eventproxy');
+var Q = require("q");
 
 var http = require('http');
 var url = require('url');
@@ -83,40 +84,66 @@ function site(){
         }catch(e) {
             this.log(true,'参数不合法：' + e.message,log.type.exception ,req, errReturn);
         }
-        repository.getById(req.params.id,function(err,article){
-            if(err){
-                this.log(true,err.message,log.type.exception ,req, errReturn);
-            }
-            if(!article){
-                this.log(true,'文章id:' + req.params.id + '不存在',log.type.exception ,req, errReturn);
-            }
-            else{
-                article.create = moment.unix(article.createTime).format('YYYY-MM-DD HH:mm:ss');
-                article.comments.total = article.comments.length;
-                var ep = new EventProxy();
-                ep.after('getuserbyid', article.comments.length, function (users) {
-                    for(var i=0;i<article.comments.length;i++){
-                        article.comments[i].userObj = users[i];
+        var getArticleById = function (articleid) {
+            var deferred = Q.defer();
+            repository.getById(articleid,function(err,article){
+                if(!err){
+                    deferred.resolve(article);
+                }else{
+                    deferred.reject(err);
+                }
+            });
+            return deferred.promise;
+        };
+        var getData = function(article){
+            var deferred = Q.defer();
+            article.create = moment.unix(article.createTime).format('YYYY-MM-DD HH:mm:ss');
+            article.comments.total = article.comments.length;
+            article.comments.forEach(function(item){
+                item.create = moment.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss');
+            });
+            deferred.resolve(article);
+            return deferred.promise;
+        };
+        var getUsersByComments = function(article){
+            var deferred = Q.defer();
+            var ids =[];
+            article.comments.forEach(function(item){
+                ids.push(item.user);
+            });
+            URepository.getListByIds(ids,function(err,users){
+                if(!err){
+                    for(var i=0;i<article.comments.length;i++) {
+                        for(var j=0;j<users.length;j++) {
+                            if ( users[j]) {
+                                if ( article.comments[i].user.toString() === users[j]._id.toString()) {
+                                    article.comments[i].userObj = users[j];
+                                }
+                            }
+                        }
                     }
-                    lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
-                    res.render('details', {
-                        title:  article.title + title,
-                        layout:'layout',
-                        success : req.flash("success").toString(),
-                        error: req.flash("error").toString(),
-                        lay : lay,
-                        data :article,
-                        page : this.page(req.query.pageIndex,req.query.pageSize,req.query.Total,'','page-navigator')
-                    });
-                }.bind(this));
-                article.comments.forEach(function(item){
-                    URepository.getById(item.user,function(err,user){
-                        ep.emit('getuserbyid', user);
-                    });
-                    item.create = moment.unix(item.createTime).format('YYYY-MM-DD HH:mm:ss');
-                });
-            }
-        }.bind(this));
+                    deferred.resolve(article);
+                }else{
+                    deferred.reject(err);
+                }
+            });
+            return deferred.promise;        };
+        var success = function(article){
+            lay.username = this.isnullOrundefined(req.session.user) ? '访问者' : req.session.user.username;
+            res.render('details', {
+                title:  article.title + title,
+                layout:'layout',
+                success : req.flash("success").toString(),
+                error: req.flash("error").toString(),
+                lay : lay,
+                data :article,
+                page : this.page(req.query.pageIndex,req.query.pageSize,req.query.Total,'','page-navigator')
+            });
+        };
+        var error = function(err){
+            this.log(true,err,log.type.exception ,req, errReturn);
+        };
+        getArticleById(req.params.id).then(getData).then(getUsersByComments).done(success.bind(this),error.bind(this) );
     };
 
     /**
