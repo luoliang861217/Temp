@@ -38,7 +38,8 @@ module.exports = function(){
      * @param callback  回调函数
      */
     this.update = function(param,callback){
-        this.getById(param.id,function(err,result){
+
+        Comment.findOne({ _id : param.id }).populate('article').populate('user').exec(function(err,result){
             if(err){
                 callback(err);
             }
@@ -47,6 +48,7 @@ module.exports = function(){
             result.user = param.user;
             result.save(callback);
         });
+
     };
 
     /**

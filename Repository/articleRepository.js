@@ -41,7 +41,8 @@ module.exports = function(){
      * @param callback  回调函数
      */
     this.update = function(param,callback){
-        this.getById(param.id,function(err,result){
+
+        Article.findOne({ _id : param.id }).populate('category').populate('user').populate('comments').populate('comments.user').exec(function(err,result){
             if(err){
                 callback(err);
             }
@@ -55,6 +56,23 @@ module.exports = function(){
             result.updateTime = param.updateTime;
             result.save(callback);
         });
+
+//        this.getById(param.id,function(err,result){
+//            if(err){
+//                callback(err);
+//            }
+//            result.title = param.title;
+//            result.content = param.content;
+//            result.tags = param.tags;
+//            result.user = param.user;
+//            result.category = param.category;
+//            result.comments = param.comments;
+//            result.PublicTime = param.PublicTime;
+//            result.updateTime = param.updateTime;
+//            result.save(callback);
+//        });
+//
+
     };
 
     /**

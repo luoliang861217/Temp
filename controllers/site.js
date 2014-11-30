@@ -43,13 +43,24 @@ function site(){
         }catch(e) {
             this.log(true,'参数不合法：' + e.message,log.type.exception ,req, errReturn);
         }
-        repository.list(req.query,function(err,articles){
-            if(err){
-                this.log(true,err,log.type.exception ,req, errReturn);
-            }
-            articles.forEach(function(e){
-                e.create = moment.unix(e.createTime).format('YYYY-MM-DD HH:mm:ss');
-            })
+        var getList = function(query){
+            var deferred = Q.defer();
+            repository.list(req.query,function(err,articles){
+                if(!err){
+                    articles.forEach(function(e){
+                        e.create = moment.unix(e.createTime).format('YYYY-MM-DD HH:mm:ss');
+                    })
+                    deferred.resolve(articles);
+                }else{
+                    deferred.reject(err);
+                }
+            });
+            return deferred.promise;
+        };
+        var error = function(err){
+            this.log(true,err,log.type.exception ,req, errReturn);
+        };
+        var success = function(articles){
             lay.user = req.session.user;
             res.render('index', {
                 title: '首页' + title,
@@ -60,7 +71,8 @@ function site(){
                 list : articles,
                 page : this.page(req.query.pageIndex,req.query.pageSize,req.query.Total,'','page-navigator')
             });
-        }.bind(this));
+        };
+        getList(req.query).done(success.bind(this),error.bind(this));
     };
 
     /**

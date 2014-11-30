@@ -45,7 +45,32 @@ module.exports = function(){
      * @param callback  回调函数
      */
     this.update = function(param,callback){
-        this.getById(param.id,function(err,result){
+
+//        this.getById(param.id,function(err,result){
+//            if(err){
+//                callback(err);
+//            }
+//            if(param.name){
+//                result.name = param.name;
+//            }
+//            if(param.slug){
+//                result.slug = param.slug;
+//            }
+//            if(param.description){
+//                result.description = param.description;
+//            }
+//            if(param.articles != undefined){
+//                result.articles = param.articles;
+//            }
+//            result.updateTime = moment().unix();
+//            if(param.parent && param.parent != ''){
+//                result.parent = param.parent;
+//            }
+//            result.save(callback);
+//        });
+
+
+        Category.findOne({ _id : param.id }).populate('parent').exec(function(err,result){
             if(err){
                 callback(err);
             }
@@ -67,6 +92,8 @@ module.exports = function(){
             }
             result.save(callback);
         });
+
+
     };
 
     /**

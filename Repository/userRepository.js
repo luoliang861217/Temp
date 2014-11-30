@@ -39,7 +39,7 @@ module.exports = function(){
      * @param callback  回调函数
      */
     this.update = function(param,callback){
-        this.getById(param.id,function(err,result){
+        User.findOne({ _id : param.id }).exec(function(err,result){
             if(err){
                 callback(err);
             }
@@ -57,8 +57,7 @@ module.exports = function(){
      * @param callback  回调函数
      */
     this.getById = function(id,callback){
-
-        User.findOne({ _id : id },callback);
+        User.findOne({ _id : id }).exec(callback);
     };
 
     this.getListByIds = function(ids,callback){
