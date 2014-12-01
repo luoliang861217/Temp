@@ -22,6 +22,8 @@ var backRoutes = require('./routes/back');//后台路由
 var log = require('./middlewares/log');//日志中间件
 //执行验证模块
 var auth = require('./middlewares/auth');
+//执行分页中间件
+var page = require('./middlewares/page');
 var settings = require('./settings');
 
 var app = express();
@@ -61,6 +63,7 @@ app.use(express.session({
 //app.use(auth.authUser);     /** 验证用户 */
 
 app.use(log.accessLog);     /** 记录日志 */
+app.use(page.getQuery);     /** 记录日志 */
 
 
 app.use(app.router);

@@ -57,7 +57,7 @@ module.exports = function(){
         else{
             return false;
         }
-    }
+    };
 
     /**
      * 分页
@@ -89,7 +89,7 @@ module.exports = function(){
         }
         html += '</ol>';
         return html;
-    }
+    };
 
 
     /**

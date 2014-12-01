@@ -30,14 +30,6 @@ function category(){
         var errReturn = function(){
             return res.redirect('/admin/category');
         };
-        try{
-            req.query.pageIndex = req.query.pageIndex === undefined ? 1 : parseInt(req.query.pageIndex) > 0 ? parseInt(req.query.pageIndex) : 1;
-            req.query.pageSize = req.query.pageSize === undefined ? 10 : parseInt(req.query.pageSize) >0 ? parseInt(req.query.pageSize) : 10;
-            req.query.pageSort = req.query.pageSort === undefined ? 1 : parseInt(req.query.pageSort);
-            req.query.Total = 0;
-        }catch(e) {
-            this.log(true,'参数不合法：' + e.message,log.type.exception ,req, errReturn);
-        }
         var errReturn = function(){
             return res.redirect('/admin/category');
         };
@@ -226,14 +218,6 @@ function category(){
             return res.redirect('/admin/category');
         };
         var repository = new categoryRepository();
-        try{
-            req.query.pageIndex = req.query.pageIndex === undefined ? 1 : parseInt(req.query.pageIndex) > 0 ? parseInt(req.query.pageIndex) : 1;
-            req.query.pageSize = req.query.pageSize === undefined ? 10 : parseInt(req.query.pageSize) >0 ? parseInt(req.query.pageSize) : 10;
-            req.query.pageSort = req.query.pageSort === undefined ? 1 : parseInt(req.query.pageSort);
-            req.query.Total = 0;
-        }catch(e) {
-            this.log(true,'参数不合法：' + e.message,log.type.exception ,req, errReturn);
-        }
         this.promise(repository.list,req.query).done(function(categoies){
             res.render('admin/category', {
                 title: '分类管理' + title,

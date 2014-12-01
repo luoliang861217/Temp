@@ -31,14 +31,6 @@ function article(){
         var errReturn = function(){
             return res.redirect('/admin/article');
         };
-        try{
-            req.query.pageIndex = req.query.pageIndex === undefined ? 1 : parseInt(req.query.pageIndex) > 0 ? parseInt(req.query.pageIndex) : 1;
-            req.query.pageSize = req.query.pageSize === undefined ? 10 : parseInt(req.query.pageSize) >0 ? parseInt(req.query.pageSize) : 10;
-            req.query.pageSort = req.query.pageSort === undefined ? 1 : parseInt(req.query.pageSort);
-            req.query.Total = 0;
-        }catch(e) {
-            this.log(true,'参数不合法：' + e.message,log.type.exception ,req, errReturn);
-        }
         var getList = function(query){
             var defered = Q.defer();
             repository.list(query,function(err,articles){
@@ -196,7 +188,6 @@ function article(){
                     }
                 });
                 return defered.promise;
-
             };
             var success = function(model){
                 this.log(false,model.article.toString(),log.type.add ,req, function(){
